@@ -95,6 +95,96 @@ function makeId() {
   return Date.now().toString() + Math.random().toString(16).slice(2);
 }
 
+function setFieldError(fieldId, message) {
+  const field = document.querySelector(`#${fieldId}`);
+  if (!field) return;
+
+  field.classList.add("is-invalid-custom");
+  field.setAttribute("aria-invalid", "true");
+
+  let error = document.querySelector(`#${fieldId}Error`);
+  if (!error) {
+    error = document.createElement("small");
+    error.id = `${fieldId}Error`;
+    error.className = "field-error";
+    field.insertAdjacentElement("afterend", error);
+  }
+
+  error.textContent = message;
+}
+
+function clearFieldError(fieldId) {
+  const field = document.querySelector(`#${fieldId}`);
+  const error = document.querySelector(`#${fieldId}Error`);
+
+  if (field) {
+    field.classList.remove("is-invalid-custom");
+    field.removeAttribute("aria-invalid");
+  }
+
+  if (error) error.remove();
+}
+
+function clearFormErrors(form) {
+  form.querySelectorAll(".field-error").forEach(error => error.remove());
+  form.querySelectorAll(".is-invalid-custom").forEach(field => {
+    field.classList.remove("is-invalid-custom");
+    field.removeAttribute("aria-invalid");
+  });
+}
+
+function validateExpenseForm({ title, category, amount, date }) {
+  clearFormErrors(expenseForm);
+  let valid = true;
+
+  if (!title) {
+    setFieldError("expenseTitle", "Judul transaksi wajib diisi.");
+    valid = false;
+  }
+
+  if (!category) {
+    setFieldError("expenseCategory", "Kategori wajib diisi.");
+    valid = false;
+  }
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    setFieldError("expenseAmount", "Jumlah harus berupa angka lebih dari 0.");
+    valid = false;
+  }
+
+  if (!date) {
+    setFieldError("expenseDate", "Tanggal wajib dipilih.");
+    valid = false;
+  }
+
+  return valid;
+}
+
+function validateBookmarkForm({ title, url, category }) {
+  clearFormErrors(bookmarkForm);
+  let valid = true;
+
+  if (!title) {
+    setFieldError("bookmarkTitle", "Nama/judul bookmark wajib diisi.");
+    valid = false;
+  }
+
+  if (!url) {
+    setFieldError("bookmarkUrl", "URL wajib diisi.");
+    valid = false;
+  } else if (!validUrl(url)) {
+    setFieldError("bookmarkUrl", "URL harus diawali http:// atau https://.");
+    valid = false;
+  }
+
+  if (!category) {
+    setFieldError("bookmarkCategory", "Kategori/tag wajib diisi.");
+    valid = false;
+  }
+
+  return valid;
+}
+
 // ======================================================
 // 1. EXPENSE TRACKER
 // ======================================================
@@ -247,8 +337,7 @@ expenseForm.addEventListener("submit", event => {
   const date = document.querySelector("#expenseDate").value;
   const id = document.querySelector("#expenseId").value;
 
-  if (!title || !category || !date || !Number.isFinite(amount) || amount <= 0) {
-    event.target.reportValidity();
+  if (!validateExpenseForm({ title, category, amount, date })) {
     return;
   }
 
@@ -386,6 +475,7 @@ function renderBookmarks() {
 
 function openBookmarkModal(id = null) {
   bookmarkForm.reset();
+  clearFormErrors(bookmarkForm);
   document.querySelector("#bookmarkId").value = "";
   document.querySelector("#bookmarkModalTitle").textContent = "Tambah Bookmark";
 
@@ -413,8 +503,7 @@ bookmarkForm.addEventListener("submit", event => {
   const note = document.querySelector("#bookmarkNote").value.trim();
   const id = document.querySelector("#bookmarkId").value;
 
-  if (!title || !category || !validUrl(url)) {
-    event.target.reportValidity();
+  if (!validateBookmarkForm({ title, url, category })) {
     return;
   }
 
@@ -502,6 +591,16 @@ confirmDeleteButton.addEventListener("click", () => {
   deleteModal.hide();
 });
 
+[...expenseForm.querySelectorAll("input, select")].forEach(field => {
+  field.addEventListener("input", () => clearFieldError(field.id));
+  field.addEventListener("change", () => clearFieldError(field.id));
+});
+
+[...bookmarkForm.querySelectorAll("input, textarea")].forEach(field => {
+  field.addEventListener("input", () => clearFieldError(field.id));
+  field.addEventListener("change", () => clearFieldError(field.id));
+});
+
 // ======================================================
 // 3. QUIZ APP
 // =======================================================
@@ -563,6 +662,7 @@ const questions = [
 let quizIndex = 0;
 let quizScore = 0;
 let selectedAnswer = null;
+let answerSubmitted = false;
 
 const quizStart = document.querySelector("#quizStart");
 const quizQuestion = document.querySelector("#quizQuestion");
@@ -601,6 +701,7 @@ function startQuiz() {
 function renderQuestion() {
   const item = questions[quizIndex];
   selectedAnswer = null;
+  answerSubmitted = false;
 
   questionNumber.textContent = `Soal ${quizIndex + 1} dari ${questions.length}`;
   currentScore.textContent = `Skor: ${quizScore}`;
@@ -635,28 +736,35 @@ function renderQuestion() {
 function submitQuizAnswer() {
   if (selectedAnswer === null) return;
 
-  const correct = questions[quizIndex].answer === selectedAnswer;
+  if (!answerSubmitted) {
+    const correct = questions[quizIndex].answer === selectedAnswer;
 
-  if (correct) {
-    quizScore++;
-    quizFeedback.innerHTML = '<span class="text-success fw-semibold">Benar!</span>';
-  } else {
-    quizFeedback.innerHTML =
-      `<span class="text-danger fw-semibold">Kurang tepat.</span> ` +
-      `Jawaban benar: ${String.fromCharCode(65 + questions[quizIndex].answer)}.`;
+    if (correct) {
+      quizScore++;
+      quizFeedback.innerHTML =
+        '<span class="text-success fw-semibold"><i class="ti ti-circle-check me-1"></i>Benar!</span>';
+    } else {
+      quizFeedback.innerHTML =
+        `<span class="text-danger fw-semibold"><i class="ti ti-circle-x me-1"></i>Kurang tepat.</span> ` +
+        `Jawaban benar: ${String.fromCharCode(65 + questions[quizIndex].answer)}.`;
+    }
+
+    currentScore.textContent = `Skor: ${quizScore}`;
+    answerSubmitted = true;
+    nextQuestion.disabled = false;
+    nextQuestion.innerHTML =
+      quizIndex === questions.length - 1
+        ? '<i class="ti ti-trophy me-1" aria-hidden="true"></i>Lihat Hasil'
+        : '<i class="ti ti-arrow-right me-1" aria-hidden="true"></i>Lanjut ke Soal Berikutnya';
+    return;
   }
 
-  currentScore.textContent = `Skor: ${quizScore}`;
-  nextQuestion.disabled = true;
-
-  setTimeout(() => {
-    if (quizIndex < questions.length - 1) {
-      quizIndex++;
-      renderQuestion();
-    } else {
-      finishQuiz();
-    }
-  }, 700);
+  if (quizIndex < questions.length - 1) {
+    quizIndex++;
+    renderQuestion();
+  } else {
+    finishQuiz();
+  }
 }
 
 function finishQuiz() {
