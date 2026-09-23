@@ -47,3 +47,12 @@ ifs24051-pabwe-p3/
 
 ## Catatan
 Proyek tidak menggunakan backend/API. Semua data disimpan pada localStorage browser.
+
+
+## Perbaikan P3
+- Tab aktif sekarang menggunakan query URL `?tab=expense|bookmark|quiz`, bukan localStorage.
+- Navigasi tab menggunakan `URLSearchParams`, `history.pushState`, `history.replaceState`, dan `popstate`.
+- State Expense, Bookmark, dan Quiz tetap memakai localStorage dengan key terpisah.
+- Konfirmasi hapus menggunakan Bootstrap modal, bukan `confirm()`.
+- `escapeHtml()` dan `escapeAttribute()` ditempatkan di bagian helper sebelum digunakan.
+- Filter/sort merespons event `input` dan `change`.

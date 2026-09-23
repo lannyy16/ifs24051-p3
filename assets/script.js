@@ -6,38 +6,82 @@
 const STORAGE = {
   expenses: "pabwe_p3_expenses",
   bookmarks: "pabwe_p3_bookmarks",
-  highScore: "pabwe_p3_high_score",
-  activeTab: "pabwe_p3_active_tab"
+  highScore: "pabwe_p3_high_score"
 };
 
 // ======================================================
 // TAB NAVIGATION
 // ======================================================
 
+const VALID_TABS = ["expense", "bookmark", "quiz"];
 const tabButtons = document.querySelectorAll("#mainTabs .nav-link");
 const tabPanels = document.querySelectorAll(".tab-panel");
 
-function showTab(tabId) {
+function getTabFromUrl() {
+  const tab = new URLSearchParams(window.location.search).get("tab");
+  return VALID_TABS.includes(tab) ? tab : "expense";
+}
+
+function updateTabUrl(tabId, replace = false) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("tab", tabId);
+
+  if (replace) {
+    history.replaceState({ tab: tabId }, "", url);
+  } else {
+    history.pushState({ tab: tabId }, "", url);
+  }
+}
+
+function showTab(tabId, updateUrl = true) {
+  const activeTab = VALID_TABS.includes(tabId) ? tabId : "expense";
+
   tabButtons.forEach(button => {
-    button.classList.toggle("active", button.dataset.tab === tabId);
+    const isActive = button.dataset.tab === activeTab;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-selected", String(isActive));
   });
 
   tabPanels.forEach(panel => {
-    panel.classList.toggle("d-none", panel.id !== tabId);
+    const isActive = panel.id === `${activeTab}Panel`;
+    panel.classList.toggle("d-none", !isActive);
+    panel.setAttribute("aria-hidden", String(!isActive));
   });
 
-  localStorage.setItem(STORAGE.activeTab, tabId);
+  if (updateUrl && getTabFromUrl() !== activeTab) {
+    updateTabUrl(activeTab);
+  }
 }
 
 tabButtons.forEach(button => {
-  button.addEventListener("click", () => showTab(button.dataset.tab));
+  button.addEventListener("click", () => {
+    showTab(button.dataset.tab);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
 });
 
-showTab(localStorage.getItem(STORAGE.activeTab) || "expensePanel");
+window.addEventListener("popstate", () => {
+  showTab(getTabFromUrl(), false);
+});
+
+showTab(getTabFromUrl(), false);
 
 // ======================================================
 // HELPER
 // ======================================================
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function escapeAttribute(value) {
+  return escapeHtml(value);
+}
 
 function rupiah(value) {
   return new Intl.NumberFormat("id-ID", {
@@ -204,7 +248,7 @@ expenseForm.addEventListener("submit", event => {
   const id = document.querySelector("#expenseId").value;
 
   if (!title || !category || !date || !Number.isFinite(amount) || amount <= 0) {
-    alert("Semua field wajib diisi dan jumlah harus lebih dari 0.");
+    event.target.reportValidity();
     return;
   }
 
@@ -237,16 +281,15 @@ expenseList.addEventListener("click", event => {
     const item = expenses.find(expense => expense.id === id);
     if (!item) return;
 
-    if (confirm(`Hapus transaksi "${item.title}"?`)) {
-      expenses = expenses.filter(expense => expense.id !== id);
-      saveExpenses();
-      renderExpenses();
-    }
+    openDeleteModal("expense", id, item.title);
   }
 });
 
 [expenseSearch, expenseTypeFilter, expenseCategoryFilter, expenseSort]
-  .forEach(element => element.addEventListener("input", renderExpenses));
+  .forEach(element => {
+    element.addEventListener("input", renderExpenses);
+    element.addEventListener("change", renderExpenses);
+  });
 
 renderExpenses();
 
@@ -371,7 +414,7 @@ bookmarkForm.addEventListener("submit", event => {
   const id = document.querySelector("#bookmarkId").value;
 
   if (!title || !category || !validUrl(url)) {
-    alert("Nama dan kategori wajib diisi. URL harus diawali http:// atau https://.");
+    event.target.reportValidity();
     return;
   }
 
@@ -413,22 +456,56 @@ bookmarkList.addEventListener("click", event => {
     const item = bookmarks.find(bookmark => bookmark.id === id);
     if (!item) return;
 
-    if (confirm(`Hapus bookmark "${item.title}"?`)) {
-      bookmarks = bookmarks.filter(bookmark => bookmark.id !== id);
-      saveBookmarks();
-      renderBookmarks();
-    }
+    openDeleteModal("bookmark", id, item.title);
   }
 });
 
 [bookmarkSearch, bookmarkSort]
-  .forEach(element => element.addEventListener("input", renderBookmarks));
+  .forEach(element => {
+    element.addEventListener("input", renderBookmarks);
+    element.addEventListener("change", renderBookmarks);
+  });
 
 renderBookmarks();
 
 // ======================================================
-// 3. QUIZ APP
+// DELETE CONFIRMATION MODAL
 // ======================================================
+
+let pendingDelete = null;
+
+const deleteModalElement = document.querySelector("#deleteModal");
+const deleteModal = bootstrap.Modal.getOrCreateInstance(deleteModalElement);
+const confirmDeleteButton = document.querySelector("#confirmDelete");
+const deleteModalBody = deleteModalElement.querySelector(".modal-body");
+
+function openDeleteModal(type, id, title) {
+  pendingDelete = { type, id };
+  deleteModalBody.textContent = `Apakah kamu yakin ingin menghapus "${title}"?`;
+  deleteModal.show();
+}
+
+confirmDeleteButton.addEventListener("click", () => {
+  if (!pendingDelete) return;
+
+  if (pendingDelete.type === "expense") {
+    expenses = expenses.filter(item => item.id !== pendingDelete.id);
+    saveExpenses();
+    renderExpenses();
+  } else if (pendingDelete.type === "bookmark") {
+    bookmarks = bookmarks.filter(item => item.id !== pendingDelete.id);
+    saveBookmarks();
+    renderBookmarks();
+  }
+
+  pendingDelete = null;
+  deleteModal.hide();
+});
+
+// ======================================================
+// 3. QUIZ APP
+// =======================================================
+
 
 const questions = [
   {
@@ -606,19 +683,3 @@ document.querySelector("#restartQuiz").addEventListener("click", startQuiz);
 
 updateHighScoreText();
 
-// ======================================================
-// ESCAPE HTML
-// ======================================================
-
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function escapeAttribute(value) {
-  return escapeHtml(value);
-}
