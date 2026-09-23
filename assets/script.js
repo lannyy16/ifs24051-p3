@@ -1,7 +1,5 @@
-// ======================================================
-// PABWE P3 - JAVASCRIPT MINI PROJECT
+// PABWE P3 - JavaScript Mini Project
 // Expense Tracker + Bookmark Manager + Quiz App
-// ======================================================
 
 const STORAGE = {
   expenses: "pabwe_p3_expenses",
@@ -9,66 +7,9 @@ const STORAGE = {
   highScore: "pabwe_p3_high_score"
 };
 
-// ======================================================
-// TAB NAVIGATION
-// ======================================================
-
 const VALID_TABS = ["expense", "bookmark", "quiz"];
-const tabButtons = document.querySelectorAll("#mainTabs .nav-link");
-const tabPanels = document.querySelectorAll(".tab-panel");
-
-function getTabFromUrl() {
-  const tab = new URLSearchParams(window.location.search).get("tab");
-  return VALID_TABS.includes(tab) ? tab : "expense";
-}
-
-function updateTabUrl(tabId, replace = false) {
-  const url = new URL(window.location.href);
-  url.searchParams.set("tab", tabId);
-
-  if (replace) {
-    history.replaceState({ tab: tabId }, "", url);
-  } else {
-    history.pushState({ tab: tabId }, "", url);
-  }
-}
-
-function showTab(tabId, updateUrl = true) {
-  const activeTab = VALID_TABS.includes(tabId) ? tabId : "expense";
-
-  tabButtons.forEach(button => {
-    const isActive = button.dataset.tab === activeTab;
-    button.classList.toggle("active", isActive);
-    button.setAttribute("aria-selected", String(isActive));
-  });
-
-  tabPanels.forEach(panel => {
-    const isActive = panel.id === `${activeTab}Panel`;
-    panel.classList.toggle("d-none", !isActive);
-    panel.setAttribute("aria-hidden", String(!isActive));
-  });
-
-  if (updateUrl && getTabFromUrl() !== activeTab) {
-    updateTabUrl(activeTab);
-  }
-}
-
-tabButtons.forEach(button => {
-  button.addEventListener("click", () => {
-    showTab(button.dataset.tab);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  });
-});
-
-window.addEventListener("popstate", () => {
-  showTab(getTabFromUrl(), false);
-});
-
-showTab(getTabFromUrl(), false);
-
-// ======================================================
-// HELPER
-// ======================================================
+const $ = selector => document.querySelector(selector);
+const $$ = selector => document.querySelectorAll(selector);
 
 function escapeHtml(value) {
   return String(value)
@@ -95,111 +36,97 @@ function makeId() {
   return Date.now().toString() + Math.random().toString(16).slice(2);
 }
 
-function setFieldError(fieldId, message) {
-  const field = document.querySelector(`#${fieldId}`);
-  if (!field) return;
-
-  field.classList.add("is-invalid-custom");
-  field.setAttribute("aria-invalid", "true");
-
-  let error = document.querySelector(`#${fieldId}Error`);
-  if (!error) {
-    error = document.createElement("small");
-    error.id = `${fieldId}Error`;
-    error.className = "field-error";
-    field.insertAdjacentElement("afterend", error);
+function loadArray(key) {
+  try {
+    const data = JSON.parse(localStorage.getItem(key));
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
   }
-
-  error.textContent = message;
 }
 
-function clearFieldError(fieldId) {
-  const field = document.querySelector(`#${fieldId}`);
-  const error = document.querySelector(`#${fieldId}Error`);
-
-  if (field) {
-    field.classList.remove("is-invalid-custom");
-    field.removeAttribute("aria-invalid");
-  }
-
-  if (error) error.remove();
+function saveArray(key, data) {
+  localStorage.setItem(key, JSON.stringify(data));
 }
 
-function clearFormErrors(form) {
-  form.querySelectorAll(".field-error").forEach(error => error.remove());
-  form.querySelectorAll(".is-invalid-custom").forEach(field => {
-    field.classList.remove("is-invalid-custom");
-    field.removeAttribute("aria-invalid");
+function validUrl(value) {
+  try {
+    const url = new URL(value);
+    return (url.protocol === "http:" || url.protocol === "https:") && /^https?:\/\/\S+$/i.test(value);
+  } catch {
+    return false;
+  }
+}
+
+function openDialog(id) {
+  const dialog = document.getElementById(id);
+  if (dialog && !dialog.open) dialog.showModal();
+}
+
+function closeDialog(id) {
+  const dialog = document.getElementById(id);
+  if (dialog?.open) dialog.close();
+}
+
+$$('[data-close-dialog]').forEach(button => {
+  button.addEventListener("click", () => closeDialog(button.dataset.closeDialog));
+});
+
+// ======================================================
+// TAB NAVIGATION - state disimpan pada URL query string
+// ======================================================
+
+const tabButtons = $$("#mainTabs [role='tab']");
+const tabPanels = $$(".tab-panel");
+
+function readTabFromUrl() {
+  const value = new URLSearchParams(window.location.search).get("tab");
+  return VALID_TABS.includes(value) ? value : "expense";
+}
+
+function setTab(tab, updateUrl = true) {
+  const activeTab = VALID_TABS.includes(tab) ? tab : "expense";
+
+  tabButtons.forEach(button => {
+    const active = button.dataset.tab === activeTab;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-selected", String(active));
+    button.tabIndex = active ? 0 : -1;
   });
+
+  tabPanels.forEach(panel => {
+    const active = panel.id === `${activeTab}Panel`;
+    panel.hidden = !active;
+  });
+
+  if (updateUrl) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", activeTab);
+    window.history.replaceState({}, "", url);
+  }
 }
 
-function validateExpenseForm({ title, category, amount, date }) {
-  clearFormErrors(expenseForm);
-  let valid = true;
+tabButtons.forEach(button => {
+  button.addEventListener("click", () => setTab(button.dataset.tab));
+});
 
-  if (!title) {
-    setFieldError("expenseTitle", "Judul transaksi wajib diisi.");
-    valid = false;
-  }
-
-  if (!category) {
-    setFieldError("expenseCategory", "Kategori wajib diisi.");
-    valid = false;
-  }
-
-  if (!Number.isFinite(amount) || amount <= 0) {
-    setFieldError("expenseAmount", "Jumlah harus berupa angka lebih dari 0.");
-    valid = false;
-  }
-
-  if (!date) {
-    setFieldError("expenseDate", "Tanggal wajib dipilih.");
-    valid = false;
-  }
-
-  return valid;
-}
-
-function validateBookmarkForm({ title, url, category }) {
-  clearFormErrors(bookmarkForm);
-  let valid = true;
-
-  if (!title) {
-    setFieldError("bookmarkTitle", "Nama/judul bookmark wajib diisi.");
-    valid = false;
-  }
-
-  if (!url) {
-    setFieldError("bookmarkUrl", "URL wajib diisi.");
-    valid = false;
-  } else if (!validUrl(url)) {
-    setFieldError("bookmarkUrl", "URL harus diawali http:// atau https://.");
-    valid = false;
-  }
-
-  if (!category) {
-    setFieldError("bookmarkCategory", "Kategori/tag wajib diisi.");
-    valid = false;
-  }
-
-  return valid;
-}
+window.addEventListener("popstate", () => setTab(readTabFromUrl(), false));
+setTab(readTabFromUrl(), true);
 
 // ======================================================
 // 1. EXPENSE TRACKER
 // ======================================================
 
-let expenses = JSON.parse(localStorage.getItem(STORAGE.expenses)) || [];
-
-const expenseForm = document.querySelector("#expenseForm");
-const expenseList = document.querySelector("#expenseList");
-const expenseSearch = document.querySelector("#expenseSearch");
-const expenseTypeFilter = document.querySelector("#expenseTypeFilter");
-const expenseCategoryFilter = document.querySelector("#expenseCategoryFilter");
-const expenseSort = document.querySelector("#expenseSort");
+let expenses = loadArray(STORAGE.expenses);
+const expenseForm = $("#expenseForm");
+const expenseList = $("#expenseList");
+const expenseSearch = $("#expenseSearch");
+const expenseTypeFilter = $("#expenseTypeFilter");
+const expenseCategoryFilter = $("#expenseCategoryFilter");
+const expenseSort = $("#expenseSort");
 
 function saveExpenses() {
-  localStorage.setItem(STORAGE.expenses, JSON.stringify(expenses));
+  saveArray(STORAGE.expenses, expenses);
 }
 
 function updateCategoryFilter() {
@@ -208,29 +135,24 @@ function updateCategoryFilter() {
     .sort((a, b) => a.localeCompare(b));
 
   expenseCategoryFilter.innerHTML = '<option value="all">Semua Kategori</option>';
-
   categories.forEach(category => {
     const option = document.createElement("option");
     option.value = category;
     option.textContent = category;
     expenseCategoryFilter.appendChild(option);
   });
-
   expenseCategoryFilter.value = categories.includes(current) ? current : "all";
 }
 
 function updateExpenseSummary() {
-  const income = expenses
-    .filter(item => item.type === "income")
-    .reduce((total, item) => total + item.amount, 0);
+  const income = expenses.filter(item => item.type === "income")
+    .reduce((total, item) => total + Number(item.amount), 0);
+  const expense = expenses.filter(item => item.type === "expense")
+    .reduce((total, item) => total + Number(item.amount), 0);
 
-  const expense = expenses
-    .filter(item => item.type === "expense")
-    .reduce((total, item) => total + item.amount, 0);
-
-  document.querySelector("#totalIncome").textContent = rupiah(income);
-  document.querySelector("#totalExpense").textContent = rupiah(expense);
-  document.querySelector("#balance").textContent = rupiah(income - expense);
+  $("#totalIncome").textContent = rupiah(income);
+  $("#totalExpense").textContent = rupiah(expense);
+  $("#balance").textContent = rupiah(income - expense);
 }
 
 function getFilteredExpenses() {
@@ -240,7 +162,7 @@ function getFilteredExpenses() {
   const sort = expenseSort.value;
 
   const filtered = expenses.filter(item => {
-    const matchTitle = item.title.toLowerCase().includes(keyword);
+    const matchTitle = String(item.title).toLowerCase().includes(keyword);
     const matchType = type === "all" || item.type === type;
     const matchCategory = category === "all" || item.category === category;
     return matchTitle && matchType && matchCategory;
@@ -249,313 +171,194 @@ function getFilteredExpenses() {
   filtered.sort((a, b) => {
     if (sort === "newest") return new Date(b.date) - new Date(a.date);
     if (sort === "oldest") return new Date(a.date) - new Date(b.date);
-    if (sort === "largest") return b.amount - a.amount;
-    if (sort === "smallest") return a.amount - b.amount;
+    if (sort === "largest") return Number(b.amount) - Number(a.amount);
+    if (sort === "smallest") return Number(a.amount) - Number(b.amount);
     return 0;
   });
-
   return filtered;
 }
 
 function renderExpenses() {
   updateCategoryFilter();
   updateExpenseSummary();
-
   const data = getFilteredExpenses();
   expenseList.innerHTML = "";
 
-  if (data.length === 0) {
-    expenseList.innerHTML = `
-      <tr>
-        <td colspan="6">
-          <div class="empty-state">Belum ada transaksi yang sesuai.</div>
-        </td>
-      </tr>
-    `;
+  if (!data.length) {
+    expenseList.innerHTML = '<tr><td colspan="6"><div class="empty-state">Belum ada transaksi yang sesuai.</div></td></tr>';
     return;
   }
 
   data.forEach(item => {
     const row = document.createElement("tr");
-
     row.innerHTML = `
-      <td>${item.date}</td>
-      <td class="fw-semibold">${escapeHtml(item.title)}</td>
-      <td><span class="badge text-bg-light">${escapeHtml(item.category)}</span></td>
-      <td>
-        <span class="badge ${item.type === "income" ? "text-bg-success" : "text-bg-danger"}">
-          ${item.type === "income" ? "Pemasukan" : "Pengeluaran"}
-        </span>
-      </td>
-      <td>${rupiah(item.amount)}</td>
-      <td>
-        <div class="d-flex gap-1">
-          <button class="btn btn-sm btn-outline-primary" data-action="edit-expense" data-id="${item.id}">
-            Ubah
-          </button>
-          <button class="btn btn-sm btn-outline-danger" data-action="delete-expense" data-id="${item.id}">
-            Hapus
-          </button>
-        </div>
-      </td>
-    `;
-
+      <td>${escapeHtml(item.date)}</td>
+      <td><strong>${escapeHtml(item.title)}</strong></td>
+      <td><span class="badge">${escapeHtml(item.category)}</span></td>
+      <td><span class="badge ${item.type === "income" ? "badge-success" : "badge-danger"}">${item.type === "income" ? "Pemasukan" : "Pengeluaran"}</span></td>
+      <td>${rupiah(Number(item.amount))}</td>
+      <td><div class="actions"><button class="btn btn-outline-primary" type="button" data-action="edit-expense" data-id="${escapeAttribute(item.id)}">Ubah</button><button class="btn btn-outline-danger" type="button" data-action="delete-expense" data-id="${escapeAttribute(item.id)}">Hapus</button></div></td>`;
     expenseList.appendChild(row);
   });
 }
 
 function openExpenseModal(id = null) {
-  const form = expenseForm;
-  form.reset();
-  document.querySelector("#expenseId").value = "";
-  document.querySelector("#expenseDate").value = new Date().toISOString().slice(0, 10);
-  document.querySelector("#expenseModalTitle").textContent = "Tambah Transaksi";
+  expenseForm.reset();
+  $("#expenseId").value = "";
+  $("#expenseDate").value = new Date().toISOString().slice(0, 10);
+  $("#expenseModalTitle").textContent = "Tambah Transaksi";
 
   if (id) {
     const item = expenses.find(expense => expense.id === id);
     if (!item) return;
-
-    document.querySelector("#expenseModalTitle").textContent = "Ubah Transaksi";
-    document.querySelector("#expenseId").value = item.id;
-    document.querySelector("#expenseTitle").value = item.title;
-    document.querySelector("#expenseCategory").value = item.category;
-    document.querySelector("#expenseAmount").value = item.amount;
-    document.querySelector("#expenseType").value = item.type;
-    document.querySelector("#expenseDate").value = item.date;
+    $("#expenseModalTitle").textContent = "Ubah Transaksi";
+    $("#expenseId").value = item.id;
+    $("#expenseTitle").value = item.title;
+    $("#expenseCategory").value = item.category;
+    $("#expenseAmount").value = item.amount;
+    $("#expenseType").value = item.type;
+    $("#expenseDate").value = item.date;
   }
-
-  bootstrap.Modal.getOrCreateInstance(document.querySelector("#expenseModal")).show();
+  openDialog("expenseModal");
 }
+
+$("[data-open-expense]").addEventListener("click", () => openExpenseModal());
 
 expenseForm.addEventListener("submit", event => {
   event.preventDefault();
+  const title = $("#expenseTitle").value.trim();
+  const category = $("#expenseCategory").value.trim();
+  const amount = Number($("#expenseAmount").value);
+  const type = $("#expenseType").value;
+  const date = $("#expenseDate").value;
+  const id = $("#expenseId").value;
 
-  const title = document.querySelector("#expenseTitle").value.trim();
-  const category = document.querySelector("#expenseCategory").value.trim();
-  const amount = Number(document.querySelector("#expenseAmount").value);
-  const type = document.querySelector("#expenseType").value;
-  const date = document.querySelector("#expenseDate").value;
-  const id = document.querySelector("#expenseId").value;
-
-  if (!validateExpenseForm({ title, category, amount, date })) {
+  if (!title || !category || !date || !Number.isFinite(amount) || amount <= 0) {
+    alert("Semua field wajib diisi dan jumlah harus lebih dari 0.");
     return;
   }
 
   const data = { id: id || makeId(), title, category, amount, type, date };
-
-  if (id) {
-    expenses = expenses.map(item => item.id === id ? data : item);
-  } else {
-    expenses.push(data);
-  }
-
+  expenses = id ? expenses.map(item => item.id === id ? data : item) : [...expenses, data];
   saveExpenses();
   renderExpenses();
-
-  bootstrap.Modal.getOrCreateInstance(document.querySelector("#expenseModal")).hide();
-  form.reset();
+  closeDialog("expenseModal");
 });
 
 expenseList.addEventListener("click", event => {
   const button = event.target.closest("button[data-action]");
   if (!button) return;
-
   const id = button.dataset.id;
-
-  if (button.dataset.action === "edit-expense") {
-    openExpenseModal(id);
-  }
-
-  if (button.dataset.action === "delete-expense") {
-    const item = expenses.find(expense => expense.id === id);
-    if (!item) return;
-
-    openDeleteModal("expense", id, item.title);
-  }
+  if (button.dataset.action === "edit-expense") openExpenseModal(id);
+  if (button.dataset.action === "delete-expense") requestDelete("expense", id);
 });
 
-[expenseSearch, expenseTypeFilter, expenseCategoryFilter, expenseSort]
-  .forEach(element => {
-    element.addEventListener("input", renderExpenses);
-    element.addEventListener("change", renderExpenses);
-  });
-
-renderExpenses();
+[expenseSearch, expenseTypeFilter, expenseCategoryFilter, expenseSort].forEach(element => {
+  element.addEventListener("input", renderExpenses);
+  element.addEventListener("change", renderExpenses);
+});
 
 // ======================================================
 // 2. BOOKMARK MANAGER
 // ======================================================
 
-let bookmarks = JSON.parse(localStorage.getItem(STORAGE.bookmarks)) || [];
-
-const bookmarkForm = document.querySelector("#bookmarkForm");
-const bookmarkList = document.querySelector("#bookmarkList");
-const bookmarkSearch = document.querySelector("#bookmarkSearch");
-const bookmarkSort = document.querySelector("#bookmarkSort");
+let bookmarks = loadArray(STORAGE.bookmarks);
+const bookmarkForm = $("#bookmarkForm");
+const bookmarkList = $("#bookmarkList");
+const bookmarkSearch = $("#bookmarkSearch");
+const bookmarkSort = $("#bookmarkSort");
 
 function saveBookmarks() {
-  localStorage.setItem(STORAGE.bookmarks, JSON.stringify(bookmarks));
-}
-
-function validUrl(value) {
-  try {
-    const url = new URL(value);
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch {
-    return false;
-  }
+  saveArray(STORAGE.bookmarks, bookmarks);
 }
 
 function getFilteredBookmarks() {
   const keyword = bookmarkSearch.value.trim().toLowerCase();
-  const sort = bookmarkSort.value;
-
   const data = bookmarks.filter(item =>
-    item.title.toLowerCase().includes(keyword) ||
-    item.url.toLowerCase().includes(keyword) ||
-    item.category.toLowerCase().includes(keyword)
+    String(item.title).toLowerCase().includes(keyword) ||
+    String(item.url).toLowerCase().includes(keyword) ||
+    String(item.category).toLowerCase().includes(keyword)
   );
-
   data.sort((a, b) => {
-    if (sort === "az") return a.title.localeCompare(b.title);
-    if (sort === "za") return b.title.localeCompare(a.title);
-    return b.createdAt - a.createdAt;
+    if (bookmarkSort.value === "az") return a.title.localeCompare(b.title);
+    if (bookmarkSort.value === "za") return b.title.localeCompare(a.title);
+    return Number(b.createdAt) - Number(a.createdAt);
   });
-
   return data;
 }
 
 function renderBookmarks() {
   bookmarkList.innerHTML = "";
   const data = getFilteredBookmarks();
-
-  if (data.length === 0) {
-    bookmarkList.innerHTML = `
-      <div class="col-12">
-        <div class="empty-state border rounded-3 bg-white">
-          Belum ada bookmark yang sesuai.
-        </div>
-      </div>
-    `;
+  if (!data.length) {
+    bookmarkList.innerHTML = '<div class="empty-state">Belum ada bookmark yang sesuai.</div>';
     return;
   }
 
   data.forEach(item => {
-    const card = document.createElement("div");
-    card.className = "col-md-6";
-
+    const card = document.createElement("article");
+    card.className = "bookmark-card";
     card.innerHTML = `
-      <div class="card h-100 app-card">
-        <div class="card-body">
-          <div class="d-flex justify-content-between gap-2">
-            <h3 class="h5 mb-2">${escapeHtml(item.title)}</h3>
-            <span class="badge text-bg-light">${escapeHtml(item.category)}</span>
-          </div>
-          <a href="${escapeAttribute(item.url)}" target="_blank" rel="noopener noreferrer" class="small d-block mb-2">
-            ${escapeHtml(item.url)}
-          </a>
-          <p class="text-secondary small mb-3">
-            ${escapeHtml(item.note || "Tidak ada catatan.")}
-          </p>
-          <div class="d-flex gap-2">
-            <button class="btn btn-sm btn-outline-primary" data-action="edit-bookmark" data-id="${item.id}">
-              Ubah
-            </button>
-            <button class="btn btn-sm btn-outline-danger" data-action="delete-bookmark" data-id="${item.id}">
-              Hapus
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-
+      <div class="bookmark-title"><h3>${escapeHtml(item.title)}</h3><span class="badge">${escapeHtml(item.category)}</span></div>
+      <a class="bookmark-url" href="${escapeAttribute(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.url)}</a>
+      <p class="bookmark-note">${escapeHtml(item.note || "Tidak ada catatan.")}</p>
+      <div class="actions"><button class="btn btn-outline-primary" type="button" data-action="edit-bookmark" data-id="${escapeAttribute(item.id)}">Ubah</button><button class="btn btn-outline-danger" type="button" data-action="delete-bookmark" data-id="${escapeAttribute(item.id)}">Hapus</button></div>`;
     bookmarkList.appendChild(card);
   });
 }
 
 function openBookmarkModal(id = null) {
   bookmarkForm.reset();
-  clearFormErrors(bookmarkForm);
-  document.querySelector("#bookmarkId").value = "";
-  document.querySelector("#bookmarkModalTitle").textContent = "Tambah Bookmark";
-
+  $("#bookmarkId").value = "";
+  $("#bookmarkModalTitle").textContent = "Tambah Bookmark";
   if (id) {
     const item = bookmarks.find(bookmark => bookmark.id === id);
     if (!item) return;
-
-    document.querySelector("#bookmarkModalTitle").textContent = "Ubah Bookmark";
-    document.querySelector("#bookmarkId").value = item.id;
-    document.querySelector("#bookmarkTitle").value = item.title;
-    document.querySelector("#bookmarkUrl").value = item.url;
-    document.querySelector("#bookmarkCategory").value = item.category;
-    document.querySelector("#bookmarkNote").value = item.note;
+    $("#bookmarkModalTitle").textContent = "Ubah Bookmark";
+    $("#bookmarkId").value = item.id;
+    $("#bookmarkTitle").value = item.title;
+    $("#bookmarkUrl").value = item.url;
+    $("#bookmarkCategory").value = item.category;
+    $("#bookmarkNote").value = item.note || "";
   }
-
-  bootstrap.Modal.getOrCreateInstance(document.querySelector("#bookmarkModal")).show();
+  openDialog("bookmarkModal");
 }
+
+$("[data-open-bookmark]").addEventListener("click", () => openBookmarkModal());
 
 bookmarkForm.addEventListener("submit", event => {
   event.preventDefault();
+  const title = $("#bookmarkTitle").value.trim();
+  const url = $("#bookmarkUrl").value.trim();
+  const category = $("#bookmarkCategory").value.trim();
+  const note = $("#bookmarkNote").value.trim();
+  const id = $("#bookmarkId").value;
 
-  const title = document.querySelector("#bookmarkTitle").value.trim();
-  const url = document.querySelector("#bookmarkUrl").value.trim();
-  const category = document.querySelector("#bookmarkCategory").value.trim();
-  const note = document.querySelector("#bookmarkNote").value.trim();
-  const id = document.querySelector("#bookmarkId").value;
-
-  if (!validateBookmarkForm({ title, url, category })) {
+  if (!title || !category || !validUrl(url)) {
+    alert("Nama dan kategori wajib diisi. URL harus diawali http:// atau https://.");
     return;
   }
 
-  const data = {
-    id: id || makeId(),
-    title,
-    url,
-    category,
-    note,
-    createdAt: id
-      ? (bookmarks.find(item => item.id === id)?.createdAt || Date.now())
-      : Date.now()
-  };
-
-  if (id) {
-    bookmarks = bookmarks.map(item => item.id === id ? data : item);
-  } else {
-    bookmarks.push(data);
-  }
-
+  const oldItem = bookmarks.find(item => item.id === id);
+  const data = { id: id || makeId(), title, url, category, note, createdAt: oldItem?.createdAt || Date.now() };
+  bookmarks = id ? bookmarks.map(item => item.id === id ? data : item) : [...bookmarks, data];
   saveBookmarks();
   renderBookmarks();
-
-  bootstrap.Modal.getOrCreateInstance(document.querySelector("#bookmarkModal")).hide();
-  bookmarkForm.reset();
+  closeDialog("bookmarkModal");
 });
 
 bookmarkList.addEventListener("click", event => {
   const button = event.target.closest("button[data-action]");
   if (!button) return;
-
   const id = button.dataset.id;
-
-  if (button.dataset.action === "edit-bookmark") {
-    openBookmarkModal(id);
-  }
-
-  if (button.dataset.action === "delete-bookmark") {
-    const item = bookmarks.find(bookmark => bookmark.id === id);
-    if (!item) return;
-
-    openDeleteModal("bookmark", id, item.title);
-  }
+  if (button.dataset.action === "edit-bookmark") openBookmarkModal(id);
+  if (button.dataset.action === "delete-bookmark") requestDelete("bookmark", id);
 });
 
-[bookmarkSearch, bookmarkSort]
-  .forEach(element => {
-    element.addEventListener("input", renderBookmarks);
-    element.addEventListener("change", renderBookmarks);
-  });
-
-renderBookmarks();
+[bookmarkSearch, bookmarkSort].forEach(element => {
+  element.addEventListener("input", renderBookmarks);
+  element.addEventListener("change", renderBookmarks);
+});
 
 // ======================================================
 // DELETE CONFIRMATION MODAL
@@ -563,119 +366,60 @@ renderBookmarks();
 
 let pendingDelete = null;
 
-const deleteModalElement = document.querySelector("#deleteModal");
-const deleteModal = bootstrap.Modal.getOrCreateInstance(deleteModalElement);
-const confirmDeleteButton = document.querySelector("#confirmDelete");
-const deleteModalBody = deleteModalElement.querySelector(".modal-body");
-
-function openDeleteModal(type, id, title) {
+function requestDelete(type, id) {
+  const item = type === "expense"
+    ? expenses.find(entry => entry.id === id)
+    : bookmarks.find(entry => entry.id === id);
+  if (!item) return;
   pendingDelete = { type, id };
-  deleteModalBody.textContent = `Apakah kamu yakin ingin menghapus "${title}"?`;
-  deleteModal.show();
+  $("#deleteMessage").textContent = `Hapus ${type === "expense" ? "transaksi" : "bookmark"} "${item.title}"?`;
+  openDialog("deleteModal");
 }
 
-confirmDeleteButton.addEventListener("click", () => {
+$("#confirmDelete").addEventListener("click", () => {
   if (!pendingDelete) return;
-
   if (pendingDelete.type === "expense") {
     expenses = expenses.filter(item => item.id !== pendingDelete.id);
     saveExpenses();
     renderExpenses();
-  } else if (pendingDelete.type === "bookmark") {
+  } else {
     bookmarks = bookmarks.filter(item => item.id !== pendingDelete.id);
     saveBookmarks();
     renderBookmarks();
   }
-
   pendingDelete = null;
-  deleteModal.hide();
-});
-
-[...expenseForm.querySelectorAll("input, select")].forEach(field => {
-  field.addEventListener("input", () => clearFieldError(field.id));
-  field.addEventListener("change", () => clearFieldError(field.id));
-});
-
-[...bookmarkForm.querySelectorAll("input, textarea")].forEach(field => {
-  field.addEventListener("input", () => clearFieldError(field.id));
-  field.addEventListener("change", () => clearFieldError(field.id));
+  closeDialog("deleteModal");
 });
 
 // ======================================================
 // 3. QUIZ APP
-// =======================================================
-
+// ======================================================
 
 const questions = [
-  {
-    question: "Apa fungsi utama JavaScript pada halaman web?",
-    options: [
-      "Mengatur database server",
-      "Membuat halaman menjadi interaktif",
-      "Mengganti sistem operasi",
-      "Mengatur kabel jaringan"
-    ],
-    answer: 1
-  },
-  {
-    question: "Method DOM yang digunakan untuk memilih satu elemen berdasarkan selector adalah...",
-    options: [
-      "querySelector()",
-      "push()",
-      "filter()",
-      "sort()"
-    ],
-    answer: 0
-  },
-  {
-    question: "Format yang digunakan untuk menyimpan array/object ke localStorage adalah...",
-    options: [
-      "JSON.stringify()",
-      "JSON.parseHTML()",
-      "String.toObject()",
-      "Object.local()"
-    ],
-    answer: 0
-  },
-  {
-    question: "Method array untuk menambahkan data ke bagian akhir array adalah...",
-    options: [
-      "find()",
-      "map()",
-      "push()",
-      "sort()"
-    ],
-    answer: 2
-  },
-  {
-    question: "Atribut HTML untuk membuka link pada tab baru adalah...",
-    options: [
-      "target=\"_blank\"",
-      "open=\"new\"",
-      "tab=\"new\"",
-      "window=\"blank\""
-    ],
-    answer: 0
-  }
+  { question: "Apa fungsi utama JavaScript pada halaman web?", options: ["Mengatur database server", "Membuat halaman menjadi interaktif", "Mengganti sistem operasi", "Mengatur kabel jaringan"], answer: 1 },
+  { question: "Method DOM yang digunakan untuk memilih satu elemen berdasarkan selector adalah...", options: ["querySelector()", "push()", "filter()", "sort()"], answer: 0 },
+  { question: "Format yang digunakan untuk menyimpan array/object ke localStorage adalah...", options: ["JSON.stringify()", "JSON.parseHTML()", "String.toObject()", "Object.local()"], answer: 0 },
+  { question: "Method array untuk menambahkan data ke bagian akhir array adalah...", options: ["find()", "map()", "push()", "sort()"], answer: 2 },
+  { question: "Atribut HTML untuk membuka link pada tab baru adalah...", options: ['target="_blank"', 'open="new"', 'tab="new"', 'window="blank"'], answer: 0 }
 ];
 
 let quizIndex = 0;
 let quizScore = 0;
 let selectedAnswer = null;
-let answerSubmitted = false;
+let answerLocked = false;
 
-const quizStart = document.querySelector("#quizStart");
-const quizQuestion = document.querySelector("#quizQuestion");
-const quizResult = document.querySelector("#quizResult");
-const questionNumber = document.querySelector("#questionNumber");
-const currentScore = document.querySelector("#currentScore");
-const questionText = document.querySelector("#questionText");
-const quizOptions = document.querySelector("#quizOptions");
-const quizFeedback = document.querySelector("#quizFeedback");
-const quizProgress = document.querySelector("#quizProgress");
-const nextQuestion = document.querySelector("#nextQuestion");
-const highScoreStart = document.querySelector("#highScoreStart");
-const highScoreResult = document.querySelector("#highScoreResult");
+const quizStart = $("#quizStart");
+const quizQuestion = $("#quizQuestion");
+const quizResult = $("#quizResult");
+const questionNumber = $("#questionNumber");
+const currentScore = $("#currentScore");
+const questionText = $("#questionText");
+const quizOptions = $("#quizOptions");
+const quizFeedback = $("#quizFeedback");
+const quizProgress = $("#quizProgress");
+const nextQuestion = $("#nextQuestion");
+const highScoreStart = $("#highScoreStart");
+const highScoreResult = $("#highScoreResult");
 
 function getHighScore() {
   return Number(localStorage.getItem(STORAGE.highScore)) || 0;
@@ -690,28 +434,25 @@ function startQuiz() {
   quizIndex = 0;
   quizScore = 0;
   selectedAnswer = null;
-
-  quizStart.classList.add("d-none");
-  quizResult.classList.add("d-none");
-  quizQuestion.classList.remove("d-none");
-
+  answerLocked = false;
+  quizStart.classList.remove("hidden");
+  quizStart.classList.add("hidden");
+  quizResult.classList.add("hidden");
+  quizQuestion.classList.remove("hidden");
   renderQuestion();
 }
 
 function renderQuestion() {
   const item = questions[quizIndex];
   selectedAnswer = null;
-  answerSubmitted = false;
-
+  answerLocked = false;
   questionNumber.textContent = `Soal ${quizIndex + 1} dari ${questions.length}`;
   currentScore.textContent = `Skor: ${quizScore}`;
   questionText.textContent = item.question;
   quizProgress.style.width = `${((quizIndex + 1) / questions.length) * 100}%`;
   quizFeedback.textContent = "";
   nextQuestion.disabled = true;
-  nextQuestion.textContent =
-    quizIndex === questions.length - 1 ? "Selesai" : "Jawaban & Lanjut";
-
+  nextQuestion.textContent = quizIndex === questions.length - 1 ? "Selesai" : "Jawaban & Lanjut";
   quizOptions.innerHTML = "";
 
   item.options.forEach((option, index) => {
@@ -719,75 +460,55 @@ function renderQuestion() {
     button.type = "button";
     button.className = "quiz-option";
     button.textContent = `${String.fromCharCode(65 + index)}. ${option}`;
-
     button.addEventListener("click", () => {
-      document.querySelectorAll(".quiz-option")
-        .forEach(element => element.classList.remove("selected"));
-
+      if (answerLocked) return;
+      $$(".quiz-option").forEach(element => element.classList.remove("selected"));
       button.classList.add("selected");
       selectedAnswer = index;
       nextQuestion.disabled = false;
     });
-
     quizOptions.appendChild(button);
   });
 }
 
 function submitQuizAnswer() {
-  if (selectedAnswer === null) return;
-
-  if (!answerSubmitted) {
-    const correct = questions[quizIndex].answer === selectedAnswer;
-
-    if (correct) {
-      quizScore++;
-      quizFeedback.innerHTML =
-        '<span class="text-success fw-semibold"><i class="ti ti-circle-check me-1"></i>Benar!</span>';
-    } else {
-      quizFeedback.innerHTML =
-        `<span class="text-danger fw-semibold"><i class="ti ti-circle-x me-1"></i>Kurang tepat.</span> ` +
-        `Jawaban benar: ${String.fromCharCode(65 + questions[quizIndex].answer)}.`;
-    }
-
-    currentScore.textContent = `Skor: ${quizScore}`;
-    answerSubmitted = true;
-    nextQuestion.disabled = false;
-    nextQuestion.innerHTML =
-      quizIndex === questions.length - 1
-        ? '<i class="ti ti-trophy me-1" aria-hidden="true"></i>Lihat Hasil'
-        : '<i class="ti ti-arrow-right me-1" aria-hidden="true"></i>Lanjut ke Soal Berikutnya';
-    return;
-  }
-
-  if (quizIndex < questions.length - 1) {
-    quizIndex++;
-    renderQuestion();
+  if (selectedAnswer === null || answerLocked) return;
+  answerLocked = true;
+  const correct = questions[quizIndex].answer === selectedAnswer;
+  if (correct) {
+    quizScore++;
+    quizFeedback.innerHTML = '<span class="success"><strong>Benar!</strong></span>';
   } else {
-    finishQuiz();
+    quizFeedback.innerHTML = `<span class="danger"><strong>Kurang tepat.</strong></span> Jawaban benar: ${String.fromCharCode(65 + questions[quizIndex].answer)}.`;
   }
+  currentScore.textContent = `Skor: ${quizScore}`;
+  nextQuestion.disabled = true;
+  window.setTimeout(() => {
+    if (quizIndex < questions.length - 1) {
+      quizIndex++;
+      renderQuestion();
+    } else {
+      finishQuiz();
+    }
+  }, 650);
 }
 
 function finishQuiz() {
   const oldHighScore = getHighScore();
-
-  if (quizScore > oldHighScore) {
-    localStorage.setItem(STORAGE.highScore, quizScore);
-  }
-
-  quizQuestion.classList.add("d-none");
-  quizResult.classList.remove("d-none");
-
-  document.querySelector("#finalScore").textContent =
-    `${quizScore} / ${questions.length}`;
-
+  if (quizScore > oldHighScore) localStorage.setItem(STORAGE.highScore, quizScore);
+  quizQuestion.classList.add("hidden");
+  quizResult.classList.remove("hidden");
+  $("#finalScore").textContent = `${quizScore} / ${questions.length}`;
   const highScore = getHighScore();
   highScoreResult.textContent = `${highScore} / ${questions.length}`;
   highScoreStart.textContent = `${highScore} / ${questions.length}`;
 }
 
-document.querySelector("#startQuiz").addEventListener("click", startQuiz);
+$("#startQuiz").addEventListener("click", startQuiz);
 nextQuestion.addEventListener("click", submitQuizAnswer);
-document.querySelector("#restartQuiz").addEventListener("click", startQuiz);
+$("#restartQuiz").addEventListener("click", startQuiz);
 
+// Initial render
+renderExpenses();
+renderBookmarks();
 updateHighScoreText();
-

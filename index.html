@@ -4,393 +4,144 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="PABWE P3 - Expense Tracker, Bookmark Manager, dan Quiz App">
+  <meta name="theme-color" content="#5b4bdb">
   <title>PABWE P3 - JavaScript Mini Project</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    :root {
-      --primary: #5b4bdb;
-      --primary-dark: #4435b8;
-      --soft: #f5f3ff;
-      --text: #29263a;
-    }
-
-    body {
-      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f7f7fb;
-      color: var(--text);
-      min-height: 100vh;
-    }
-
-    .navbar-brand {
-      font-weight: 800;
-      color: var(--primary) !important;
-    }
-
-    .hero {
-      background: linear-gradient(135deg, #5b4bdb, #8175ee);
-      color: white;
-      border-radius: 0 0 28px 28px;
-    }
-
-    .app-card {
-      border: 0;
-      border-radius: 18px;
-      box-shadow: 0 8px 30px rgba(35, 31, 70, 0.08);
-    }
-
-    .nav-pills .nav-link {
-      color: #5c5870;
-      border-radius: 12px;
-      font-weight: 600;
-    }
-
-    .nav-pills .nav-link.active {
-      background: var(--primary);
-    }
-
-    .summary-card {
-      border-radius: 16px;
-      border: 1px solid #eceaf7;
-      background: white;
-    }
-
-    .summary-value {
-      font-size: 1.35rem;
-      font-weight: 800;
-    }
-
-    .table td, .table th {
-      vertical-align: middle;
-    }
-
-    .empty-state {
-      padding: 35px 15px;
-      text-align: center;
-      color: #77728a;
-    }
-
-    .quiz-option {
-      text-align: left;
-      border: 1px solid #ddd9ee;
-      background: white;
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 10px;
-      width: 100%;
-      transition: .2s;
-    }
-
-    .quiz-option:hover {
-      border-color: var(--primary);
-      background: var(--soft);
-    }
-
-    .quiz-option.selected {
-      border-color: var(--primary);
-      background: var(--soft);
-    }
-
-    .modal-content {
-      border: 0;
-      border-radius: 18px;
-    }
-
-    footer {
-      color: #77728a;
-    }
-
-    .field-error {
-      display: block;
-      margin-top: 6px;
-      color: #dc3545;
-      font-size: 0.875rem;
-      font-weight: 500;
-    }
-
-    .is-invalid-custom {
-      border-color: #dc3545 !important;
-      box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.1) !important;
-    }
-
-    .quiz-feedback {
-      min-height: 44px;
-      padding: 10px 12px;
-      border-radius: 10px;
-      background: #f8f7fc;
-    }
+    :root{--primary:#5b4bdb;--primary-dark:#4435b8;--soft:#f5f3ff;--text:#29263a;--muted:#555064;--border:#e5e1f0;--bg:#f7f7fb;--success:#146c43;--danger:#b02a37}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.5}button,input,select,textarea{font:inherit}.container{width:min(1120px,calc(100% - 32px));margin-inline:auto}
+    .skip-link{position:absolute;left:12px;top:-48px;background:#111;color:#fff;padding:10px 14px;border-radius:8px;z-index:100}.skip-link:focus{top:12px}
+    .navbar{background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}.nav-inner{min-height:62px;display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{font-weight:800;color:var(--primary);text-decoration:none}.small{font-size:.875rem}.muted{color:var(--muted)}
+    .hero{background:linear-gradient(135deg,#5b4bdb,#8175ee);color:#fff;padding:48px 0;border-radius:0 0 28px 28px}.hero h1{margin:.15rem 0 .5rem;font-size:clamp(2rem,4vw,3rem);line-height:1.1}.hero p{margin:0}.hero .eyebrow{margin-bottom:8px;opacity:.92}
+    main{padding:32px 0}.app-card{background:#fff;border-radius:18px;box-shadow:0 8px 30px rgba(35,31,70,.08);padding:24px}.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 24px;padding:0}.tab-button{border:0;background:transparent;color:#514c64;border-radius:12px;padding:10px 16px;font-weight:700;cursor:pointer}.tab-button:hover,.tab-button:focus-visible{background:#eeeafd;color:var(--primary)}.tab-button.active{background:var(--primary);color:#fff}.tab-panel[hidden]{display:none}
+    .section-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}.section-head h2{margin:0 0 4px;font-size:1.35rem}.section-head p{margin:0;color:var(--muted)}
+    .btn{border:1px solid transparent;border-radius:9px;padding:9px 14px;cursor:pointer;font-weight:600}.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover,.btn-primary:focus-visible{background:var(--primary-dark)}.btn-outline-primary{background:#fff;color:var(--primary);border-color:var(--primary)}.btn-outline-danger{background:#fff;color:var(--danger);border-color:var(--danger)}.btn-light{background:#f2f1f5;color:#29263a;border-color:#dedbe7}.btn:focus-visible,.form-control:focus-visible,.form-select:focus-visible,.quiz-option:focus-visible{outline:3px solid rgba(91,75,219,.25);outline-offset:2px}
+    .summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}.summary-card{border:1px solid var(--border);border-radius:16px;background:#fff;padding:16px}.summary-card small{color:var(--muted)}.summary-value{font-size:1.35rem;font-weight:800;margin-top:4px}.success{color:var(--success)}.danger{color:var(--danger)}.primary{color:var(--primary)}
+    .filters{display:grid;grid-template-columns:2fr 1.1fr 1.1fr 1.1fr;gap:10px;margin-bottom:18px}.form-group{display:flex;flex-direction:column;gap:6px}.form-label{font-weight:600;font-size:.9rem}.form-control,.form-select{width:100%;border:1px solid #cfcbdc;border-radius:9px;background:#fff;padding:10px 12px;color:var(--text)}.form-control::placeholder{color:#6b6678}
+    .table-wrap{overflow-x:auto}.table{width:100%;border-collapse:collapse}.table th,.table td{text-align:left;padding:12px 10px;border-bottom:1px solid #eceaf2;vertical-align:middle}.table th{font-size:.9rem}.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eeeef3;font-size:.78rem}.badge-success{background:#dff3e8;color:#0f5c38}.badge-danger{background:#fbe3e5;color:#8f1f2b}.actions{display:flex;gap:6px;flex-wrap:wrap}.empty-state{padding:35px 15px;text-align:center;color:#4f4a5a;background:#fff;border:1px dashed #cbc7d7;border-radius:12px}
+    .bookmark-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.bookmark-card{border:1px solid var(--border);border-radius:16px;padding:18px;background:#fff}.bookmark-title{display:flex;justify-content:space-between;gap:12px;align-items:start}.bookmark-title h3{margin:0;font-size:1.1rem}.bookmark-url{display:block;overflow-wrap:anywhere;margin:8px 0;color:#4334a8}.bookmark-note{color:var(--muted);font-size:.9rem;min-height:42px}
+    .quiz-center{text-align:center}.quiz-progress{height:10px;background:#e9e7f1;border-radius:999px;overflow:hidden;margin:10px 0 24px}.quiz-progress-bar{height:100%;width:0;background:var(--primary);transition:width .2s}.quiz-options{display:grid;gap:10px;margin:18px 0}.quiz-option{text-align:left;border:1px solid #d7d3e4;background:#fff;border-radius:12px;padding:14px;width:100%;cursor:pointer}.quiz-option:hover,.quiz-option.selected{border-color:var(--primary);background:var(--soft)}.feedback{min-height:28px}.quiz-actions{display:flex;justify-content:flex-end}.hidden{display:none!important}
+    dialog{width:min(520px,calc(100% - 32px));border:0;border-radius:18px;padding:0;box-shadow:0 20px 70px rgba(20,15,45,.25)}dialog::backdrop{background:rgba(20,16,35,.55)}.modal-form{padding:0}.modal-header,.modal-footer{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}.modal-header{border-bottom:1px solid var(--border)}.modal-footer{border-top:1px solid var(--border);justify-content:flex-end}.modal-body{padding:20px;display:grid;gap:14px}.modal-title{margin:0;font-size:1.15rem}.close-btn{border:0;background:transparent;font-size:1.5rem;line-height:1;cursor:pointer;color:#4b465a}.confirm-text{margin:0;color:var(--muted)}
+    .bookmark-filters{grid-template-columns:2fr 1fr}footer{color:#4b465a;text-align:center;padding:24px 0;font-size:.875rem}
+    @media(max-width:800px){.filters{grid-template-columns:1fr 1fr}.bookmark-filters{grid-template-columns:1fr 1fr}.summary-grid{grid-template-columns:1fr}.bookmark-grid{grid-template-columns:1fr}}
+    @media(max-width:560px){.bookmark-filters{grid-template-columns:1fr}.container{width:min(100% - 20px,1120px)}.app-card{padding:16px}.filters{grid-template-columns:1fr}.nav-inner{align-items:flex-start;padding:12px 0;flex-direction:column}.hero{padding:36px 0}.table th,.table td{white-space:nowrap}.actions{flex-direction:column}}
   </style>
 </head>
-
 <body>
-  <nav class="navbar bg-white border-bottom sticky-top">
-    <div class="container">
-      <a class="navbar-brand" href="#">PABWE P3</a>
-      <span class="small text-secondary">JavaScript Mini Project</span>
+  <a class="skip-link" href="#mainContent">Lewati ke konten utama</a>
+  <nav class="navbar" aria-label="Navigasi utama">
+    <div class="container nav-inner">
+      <a class="brand" href="./?tab=expense">PABWE P3</a>
+      <span class="small muted">JavaScript Mini Project</span>
     </div>
   </nav>
 
-  <header class="hero py-5">
+  <header class="hero">
     <div class="container">
-      <p class="mb-2 opacity-75">Praktik JavaScript (JS)</p>
-      <h1 class="fw-bold">Mini Project JavaScript</h1>
-      <p class="mb-0">
-        Expense Tracker, Bookmark Manager, dan Quiz App dalam satu halaman.
-      </p>
+      <p class="eyebrow">Praktik JavaScript (JS)</p>
+      <h1>Mini Project JavaScript</h1>
+      <p>Expense Tracker, Bookmark Manager, dan Quiz App dalam satu halaman.</p>
     </div>
   </header>
 
-  <main class="container py-4">
-    <div class="card app-card">
-      <div class="card-body p-3 p-md-4">
-        <ul class="nav nav-pills gap-2 mb-4" id="mainTabs" role="tablist">
-          <li class="nav-item">
-            <button class="nav-link active" data-tab="expense" type="button" role="tab" aria-selected="false">
-              Expense Tracker
-            </button>
-          </li>
-          <li class="nav-item">
-            <button class="nav-link" data-tab="bookmark" type="button" role="tab" aria-selected="false">
-              Bookmark Manager
-            </button>
-          </li>
-          <li class="nav-item">
-            <button class="nav-link" data-tab="quiz" type="button" role="tab" aria-selected="false">
-              Quiz App
-            </button>
-          </li>
-        </ul>
-
-        <!-- EXPENSE -->
-        <section id="expensePanel" class="tab-panel">
-          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-            <div>
-              <h2 class="h4 mb-1">Catatan Pengeluaran Harian</h2>
-              <p class="text-secondary mb-0">Kelola pemasukan dan pengeluaran dengan localStorage.</p>
-            </div>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#expenseModal">
-              <i class="ti ti-plus me-1" aria-hidden="true"></i>Tambah Transaksi
-            </button>
-          </div>
-
-          <div class="row g-3 mb-4">
-            <div class="col-md-4">
-              <div class="summary-card p-3">
-                <small class="text-secondary">Total Pemasukan</small>
-                <div id="totalIncome" class="summary-value text-success">Rp0</div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="summary-card p-3">
-                <small class="text-secondary">Total Pengeluaran</small>
-                <div id="totalExpense" class="summary-value text-danger">Rp0</div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="summary-card p-3">
-                <small class="text-secondary">Saldo</small>
-                <div id="balance" class="summary-value text-primary">Rp0</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="row g-2 mb-3">
-            <div class="col-md-5">
-              <input id="expenseSearch" class="form-control" type="search" placeholder="Cari judul transaksi...">
-            </div>
-            <div class="col-md-3">
-              <select id="expenseTypeFilter" class="form-select">
-                <option value="all">Semua Tipe</option>
-                <option value="income">Pemasukan</option>
-                <option value="expense">Pengeluaran</option>
-              </select>
-            </div>
-            <div class="col-md-2">
-              <select id="expenseCategoryFilter" class="form-select">
-                <option value="all">Semua Kategori</option>
-              </select>
-            </div>
-            <div class="col-md-2">
-              <select id="expenseSort" class="form-select">
-                <option value="newest">Terbaru</option>
-                <option value="oldest">Terlama</option>
-                <option value="largest">Jumlah Terbesar</option>
-                <option value="smallest">Jumlah Terkecil</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="table-responsive">
-            <table class="table align-middle">
-              <thead>
-                <tr>
-                  <th>Tanggal</th>
-                  <th>Judul</th>
-                  <th>Kategori</th>
-                  <th>Tipe</th>
-                  <th>Jumlah</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody id="expenseList"></tbody>
-            </table>
-          </div>
-        </section>
-
-        <!-- BOOKMARK -->
-        <section id="bookmarkPanel" class="tab-panel d-none">
-          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-            <div>
-              <h2 class="h4 mb-1">Bookmark / Link Manager</h2>
-              <p class="text-secondary mb-0">Simpan tautan favorit dengan validasi URL.</p>
-            </div>
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#bookmarkModal">
-              <i class="ti ti-bookmark-plus me-1" aria-hidden="true"></i>Tambah Bookmark
-            </button>
-          </div>
-
-          <div class="row g-2 mb-3">
-            <div class="col-md-8">
-              <input id="bookmarkSearch" class="form-control" type="search" placeholder="Cari nama, URL, atau kategori...">
-            </div>
-            <div class="col-md-4">
-              <select id="bookmarkSort" class="form-select">
-                <option value="newest">Terbaru</option>
-                <option value="az">Judul A-Z</option>
-                <option value="za">Judul Z-A</option>
-              </select>
-            </div>
-          </div>
-
-          <div id="bookmarkList" class="row g-3"></div>
-        </section>
-
-        <!-- QUIZ -->
-        <section id="quizPanel" class="tab-panel d-none">
-          <div class="text-center mb-4">
-            <h2 class="h4">Kuis Interaktif JavaScript</h2>
-            <p class="text-secondary">5 soal dasar HTML, CSS, dan JavaScript.</p>
-          </div>
-
-          <div id="quizStart" class="text-center py-4">
-            <p>Jawab semua soal dan simpan skor terbaikmu.</p>
-            <p class="fw-bold">High Score: <span id="highScoreStart">0 / 5</span></p>
-            <button id="startQuiz" class="btn btn-primary px-4"><i class="ti ti-player-play me-1" aria-hidden="true"></i>Mulai Kuis</button>
-          </div>
-
-          <div id="quizQuestion" class="d-none">
-            <div class="d-flex justify-content-between mb-2">
-              <span id="questionNumber" class="fw-semibold"></span>
-              <span id="currentScore" class="text-secondary"></span>
-            </div>
-            <div class="progress mb-4">
-              <div id="quizProgress" class="progress-bar" style="width: 0%"></div>
-            </div>
-            <h3 id="questionText" class="h5 mb-3"></h3>
-            <div id="quizOptions"></div>
-            <div id="quizFeedback" class="quiz-feedback mb-3"></div>
-            <button id="nextQuestion" class="btn btn-primary" disabled>Jawaban & Lanjut</button>
-          </div>
-
-          <div id="quizResult" class="d-none text-center py-4">
-            <h3 class="h4">Kuis Selesai 🎉</h3>
-            <p class="fs-5">Skor kamu: <strong id="finalScore">0 / 5</strong></p>
-            <p>High Score: <strong id="highScoreResult">0 / 5</strong></p>
-            <button id="restartQuiz" class="btn btn-primary"><i class="ti ti-refresh me-1" aria-hidden="true"></i>Main Lagi</button>
-          </div>
-        </section>
+  <main id="mainContent" class="container">
+    <div class="app-card">
+      <div class="tabs" id="mainTabs" role="tablist" aria-label="Fitur aplikasi">
+        <button id="tab-expense" class="tab-button active" data-tab="expense" type="button" role="tab" aria-selected="true" aria-controls="expensePanel">Expense Tracker</button>
+        <button id="tab-bookmark" class="tab-button" data-tab="bookmark" type="button" role="tab" aria-selected="false" aria-controls="bookmarkPanel">Bookmark Manager</button>
+        <button id="tab-quiz" class="tab-button" data-tab="quiz" type="button" role="tab" aria-selected="false" aria-controls="quizPanel">Quiz App</button>
       </div>
-    </div>
 
-    <footer class="text-center py-4 small">
-      PABWE P3 • JavaScript DOM • Event • Array/Object • localStorage
-    </footer>
+      <section id="expensePanel" class="tab-panel" role="tabpanel" aria-labelledby="tab-expense">
+        <div class="section-head">
+          <div><h2>Catatan Pengeluaran Harian</h2><p>Kelola pemasukan dan pengeluaran dengan localStorage.</p></div>
+          <button class="btn btn-primary" type="button" data-open-expense>+ Tambah Transaksi</button>
+        </div>
+        <div class="summary-grid">
+          <div class="summary-card"><small>Total Pemasukan</small><div id="totalIncome" class="summary-value success">Rp0</div></div>
+          <div class="summary-card"><small>Total Pengeluaran</small><div id="totalExpense" class="summary-value danger">Rp0</div></div>
+          <div class="summary-card"><small>Saldo</small><div id="balance" class="summary-value primary">Rp0</div></div>
+        </div>
+        <div class="filters">
+          <div class="form-group"><label class="form-label" for="expenseSearch">Cari transaksi</label><input id="expenseSearch" class="form-control" type="search" placeholder="Cari judul transaksi..."></div>
+          <div class="form-group"><label class="form-label" for="expenseTypeFilter">Filter tipe</label><select id="expenseTypeFilter" class="form-select"><option value="all">Semua Tipe</option><option value="income">Pemasukan</option><option value="expense">Pengeluaran</option></select></div>
+          <div class="form-group"><label class="form-label" for="expenseCategoryFilter">Filter kategori</label><select id="expenseCategoryFilter" class="form-select"><option value="all">Semua Kategori</option></select></div>
+          <div class="form-group"><label class="form-label" for="expenseSort">Urutkan</label><select id="expenseSort" class="form-select"><option value="newest">Terbaru</option><option value="oldest">Terlama</option><option value="largest">Jumlah Terbesar</option><option value="smallest">Jumlah Terkecil</option></select></div>
+        </div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead><tr><th scope="col">Tanggal</th><th scope="col">Judul</th><th scope="col">Kategori</th><th scope="col">Tipe</th><th scope="col">Jumlah</th><th scope="col">Aksi</th></tr></thead>
+            <tbody id="expenseList"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="bookmarkPanel" class="tab-panel" role="tabpanel" aria-labelledby="tab-bookmark" hidden>
+        <div class="section-head">
+          <div><h2>Bookmark / Link Manager</h2><p>Simpan tautan favorit dengan validasi URL.</p></div>
+          <button class="btn btn-primary" type="button" data-open-bookmark>+ Tambah Bookmark</button>
+        </div>
+        <div class="filters bookmark-filters">
+          <div class="form-group"><label class="form-label" for="bookmarkSearch">Cari bookmark</label><input id="bookmarkSearch" class="form-control" type="search" placeholder="Cari nama, URL, atau kategori..."></div>
+          <div class="form-group"><label class="form-label" for="bookmarkSort">Urutkan</label><select id="bookmarkSort" class="form-select"><option value="newest">Terbaru</option><option value="az">Judul A-Z</option><option value="za">Judul Z-A</option></select></div>
+        </div>
+        <div id="bookmarkList" class="bookmark-grid"></div>
+      </section>
+
+      <section id="quizPanel" class="tab-panel" role="tabpanel" aria-labelledby="tab-quiz" hidden>
+        <div class="quiz-center">
+          <h2>Kuis Interaktif JavaScript</h2><p class="muted">5 soal dasar HTML, CSS, dan JavaScript.</p>
+        </div>
+        <div id="quizStart" class="quiz-center">
+          <p>Jawab semua soal dan simpan skor terbaikmu.</p><p><strong>High Score: <span id="highScoreStart">0 / 5</span></strong></p><button id="startQuiz" class="btn btn-primary" type="button">Mulai Kuis</button>
+        </div>
+        <div id="quizQuestion" class="hidden">
+          <div class="section-head"><strong id="questionNumber"></strong><span id="currentScore" class="muted"></span></div>
+          <div class="quiz-progress" aria-label="Progress kuis"><div id="quizProgress" class="quiz-progress-bar"></div></div>
+          <h3 id="questionText"></h3><div id="quizOptions" class="quiz-options"></div><div id="quizFeedback" class="feedback" aria-live="polite"></div>
+          <div class="quiz-actions"><button id="nextQuestion" class="btn btn-primary" type="button" disabled>Jawaban &amp; Lanjut</button></div>
+        </div>
+        <div id="quizResult" class="quiz-center hidden"><h3>Kuis Selesai 🎉</h3><p>Skor kamu: <strong id="finalScore">0 / 5</strong></p><p>High Score: <strong id="highScoreResult">0 / 5</strong></p><button id="restartQuiz" class="btn btn-primary" type="button">Main Lagi</button></div>
+      </section>
+    </div>
   </main>
 
-  <!-- EXPENSE MODAL -->
-  <div class="modal fade" id="expenseModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <form id="expenseForm" class="modal-content">
-        <div class="modal-header">
-          <h2 id="expenseModalTitle" class="modal-title h5">Tambah Transaksi</h2>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
-        </div>
-        <div class="modal-body">
-          <input id="expenseId" type="hidden">
-          <div class="mb-3">
-            <label class="form-label" for="expenseTitle">Judul/Deskripsi</label>
-            <input id="expenseTitle" class="form-control" required maxlength="80">
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="expenseCategory">Kategori</label>
-            <input id="expenseCategory" class="form-control" placeholder="Contoh: Makanan" required maxlength="40">
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="expenseAmount">Jumlah</label>
-            <input id="expenseAmount" class="form-control" type="number" min="1" step="1" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="expenseType">Tipe</label>
-            <select id="expenseType" class="form-select" required>
-              <option value="expense">Pengeluaran</option>
-              <option value="income">Pemasukan</option>
-            </select>
-          </div>
-          <div>
-            <label class="form-label" for="expenseDate">Tanggal</label>
-            <input id="expenseDate" class="form-control" type="date" required>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-          <button class="btn btn-primary" type="submit">Simpan</button>
-        </div>
-      </form>
-    </div>
-  </div>
+  <footer>PABWE P3 • JavaScript DOM • Event • Array/Object • localStorage</footer>
 
-  <!-- BOOKMARK MODAL -->
-  <div class="modal fade" id="bookmarkModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <form id="bookmarkForm" class="modal-content">
-        <div class="modal-header">
-          <h2 id="bookmarkModalTitle" class="modal-title h5">Tambah Bookmark</h2>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
-        </div>
-        <div class="modal-body">
-          <input id="bookmarkId" type="hidden">
-          <div class="mb-3">
-            <label class="form-label" for="bookmarkTitle">Nama/Judul</label>
-            <input id="bookmarkTitle" class="form-control" required maxlength="80">
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="bookmarkUrl">URL</label>
-            <input id="bookmarkUrl" class="form-control" type="url" placeholder="https://contoh.com" required>
-          </div>
-          <div class="mb-3">
-            <label class="form-label" for="bookmarkCategory">Kategori/Tag</label>
-            <input id="bookmarkCategory" class="form-control" placeholder="Contoh: Belajar" required maxlength="40">
-          </div>
-          <div>
-            <label class="form-label" for="bookmarkNote">Catatan Singkat</label>
-            <textarea id="bookmarkNote" class="form-control" rows="3" maxlength="200"></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-          <button class="btn btn-primary" type="submit">Simpan</button>
-        </div>
-      </form>
-    </div>
-  </div>
+  <dialog id="expenseModal" aria-labelledby="expenseModalTitle">
+    <form id="expenseForm" class="modal-form" method="dialog">
+      <div class="modal-header"><h2 id="expenseModalTitle" class="modal-title">Tambah Transaksi</h2><button class="close-btn" type="button" data-close-dialog="expenseModal" aria-label="Tutup dialog">×</button></div>
+      <div class="modal-body">
+        <input id="expenseId" type="hidden">
+        <div class="form-group"><label class="form-label" for="expenseTitle">Judul/Deskripsi</label><input id="expenseTitle" class="form-control" required maxlength="80"></div>
+        <div class="form-group"><label class="form-label" for="expenseCategory">Kategori</label><input id="expenseCategory" class="form-control" placeholder="Contoh: Makanan" required maxlength="40"></div>
+        <div class="form-group"><label class="form-label" for="expenseAmount">Jumlah</label><input id="expenseAmount" class="form-control" type="number" min="1" step="1" required></div>
+        <div class="form-group"><label class="form-label" for="expenseType">Tipe</label><select id="expenseType" class="form-select" required><option value="expense">Pengeluaran</option><option value="income">Pemasukan</option></select></div>
+        <div class="form-group"><label class="form-label" for="expenseDate">Tanggal</label><input id="expenseDate" class="form-control" type="date" required></div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-light" data-close-dialog="expenseModal">Batal</button><button class="btn btn-primary" type="submit">Simpan</button></div>
+    </form>
+  </dialog>
 
-  
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h2 class="modal-title fs-5" id="deleteModalLabel">Konfirmasi Hapus</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button></div><div class="modal-body">Apakah kamu yakin ingin menghapus data ini?</div><div class="modal-footer"><button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Batal</button><button class="btn btn-danger" id="confirmDelete" type="button">Hapus</button></div></div></div></div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="assets/script.js"></script>
+  <dialog id="bookmarkModal" aria-labelledby="bookmarkModalTitle">
+    <form id="bookmarkForm" class="modal-form" method="dialog">
+      <div class="modal-header"><h2 id="bookmarkModalTitle" class="modal-title">Tambah Bookmark</h2><button class="close-btn" type="button" data-close-dialog="bookmarkModal" aria-label="Tutup dialog">×</button></div>
+      <div class="modal-body">
+        <input id="bookmarkId" type="hidden">
+        <div class="form-group"><label class="form-label" for="bookmarkTitle">Nama/Judul</label><input id="bookmarkTitle" class="form-control" required maxlength="80"></div>
+        <div class="form-group"><label class="form-label" for="bookmarkUrl">URL</label><input id="bookmarkUrl" class="form-control" type="url" placeholder="https://contoh.com" required></div>
+        <div class="form-group"><label class="form-label" for="bookmarkCategory">Kategori/Tag</label><input id="bookmarkCategory" class="form-control" placeholder="Contoh: Belajar" required maxlength="40"></div>
+        <div class="form-group"><label class="form-label" for="bookmarkNote">Catatan Singkat</label><textarea id="bookmarkNote" class="form-control" rows="3" maxlength="200"></textarea></div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-light" data-close-dialog="bookmarkModal">Batal</button><button class="btn btn-primary" type="submit">Simpan</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="deleteModal" aria-labelledby="deleteModalTitle">
+    <div class="modal-header"><h2 id="deleteModalTitle" class="modal-title">Konfirmasi Hapus</h2><button class="close-btn" type="button" data-close-dialog="deleteModal" aria-label="Tutup dialog">×</button></div>
+    <div class="modal-body"><p id="deleteMessage" class="confirm-text">Apakah data ini akan dihapus?</p></div>
+    <div class="modal-footer"><button type="button" class="btn btn-light" data-close-dialog="deleteModal">Batal</button><button id="confirmDelete" type="button" class="btn btn-outline-danger">Hapus</button></div>
+  </dialog>
+
+  <script src="assets/script.js" defer></script>
 </body>
 </html>
